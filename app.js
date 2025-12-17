@@ -124,7 +124,7 @@ function loadStream(url, channelIndex) {
             backBufferLength: 30,
             maxBufferLength: 20,
             maxMaxBufferLength: 25,
-            maxBufferSize: 30 * 1000 * 1000,
+            maxBufferSize: 30 * 1000 * 1000, // 30MB in bytes
             maxBufferHole: 0.5,
             highBufferWatchdogPeriod: 1,
             nudgeOffset: 0.1,
