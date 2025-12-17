@@ -145,17 +145,18 @@ function loadStream(url, channelIndex) {
 
         // Start playing as soon as manifest is parsed
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            loading.style.display = 'none';
             video.play().catch(e => {
                 console.log('Autoplay prevented:', e);
                 showError('Click the play button to start the stream');
             });
         });
         
-        // Additional optimization: hide loading indicator when first fragment is loaded
+        // Hide loading indicator when first fragment is loaded for faster perceived performance
+        let firstFragmentLoaded = false;
         hls.on(Hls.Events.FRAG_LOADED, function(event, data) {
-            if (data.frag.sn === 0 || data.frag.sn === 'initSegment') {
+            if (!firstFragmentLoaded) {
                 loading.style.display = 'none';
+                firstFragmentLoaded = true;
             }
         });
 
