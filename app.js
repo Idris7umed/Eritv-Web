@@ -1,7 +1,8 @@
 // IPTV M3U Playlist URL
 const M3U_URL = 'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/er.m3u';
 
-// Proxy URL to avoid CORS issues
+// Proxy URL to avoid CORS issues when fetching from GitHub
+// Note: For production, consider using Cloudflare Workers or your own CORS proxy
 const PROXY_URL = 'https://api.allorigins.win/raw?url=';
 
 let channels = [];
@@ -145,11 +146,8 @@ function loadStream(url, channelIndex) {
             loading.style.display = 'none';
             video.play().catch(e => {
                 console.log('Autoplay prevented:', e);
-                // Unmute and try again
-                video.muted = false;
-                video.play().catch(err => {
-                    console.log('Playback failed:', err);
-                });
+                // Keep video muted - user can unmute via controls
+                showError('Click the play button to start the stream');
             });
         });
 
@@ -180,11 +178,8 @@ function loadStream(url, channelIndex) {
             loading.style.display = 'none';
             video.play().catch(e => {
                 console.log('Autoplay prevented:', e);
-                // Unmute and try again
-                video.muted = false;
-                video.play().catch(err => {
-                    console.log('Playback failed:', err);
-                });
+                // Keep video muted - user can unmute via controls
+                showError('Click the play button to start the stream');
             });
         });
         video.addEventListener('error', function() {
