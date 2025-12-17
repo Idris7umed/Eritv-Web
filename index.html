@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ERi-TV Live Stream</title>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- DNS Prefetch and Preconnect for faster loading -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://jmc-live.ercdn.net">
+    <link rel="dns-prefetch" href="https://api.allorigins.win">
+    <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
+    
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://jmc-live.ercdn.net" crossorigin>
+    
+    <!-- Preload HLS.js for faster script loading -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/hls.js@1.4.14" as="script">
 </head>
 <body>
     <div class="container">
@@ -15,7 +27,7 @@
 
         <main>
             <div class="video-container">
-                <video id="video" controls autoplay muted></video>
+                <video id="video" controls autoplay muted preload="auto" playsinline></video>
                 <div id="loading" class="loading">Loading stream...</div>
                 <div id="error" class="error" style="display: none;"></div>
             </div>
