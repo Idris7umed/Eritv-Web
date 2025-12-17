@@ -1,14 +1,9 @@
-// IPTV M3U Playlist URL
 const M3U_URL = 'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/er.m3u';
-
-// Proxy URL to avoid CORS issues when fetching from GitHub
-// Note: For production, consider using Cloudflare Workers or your own CORS proxy
 const PROXY_URL = 'https://api.allorigins.win/raw?url=';
 
 let channels = [];
 let hls = null;
 
-// Parse M3U playlist
 function parseM3U(content) {
     const lines = content.split('\n');
     const channels = [];
@@ -18,7 +13,6 @@ function parseM3U(content) {
         const line = lines[i].trim();
         
         if (line.startsWith('#EXTINF:')) {
-            // Extract channel info
             const match = line.match(/#EXTINF:-?\d+\s*(.*)?,(.+)/);
             if (match) {
                 currentChannel = {
@@ -27,7 +21,6 @@ function parseM3U(content) {
                 };
             }
         } else if (line && !line.startsWith('#') && currentChannel) {
-            // This is the stream URL
             currentChannel.url = line;
             channels.push(currentChannel);
             currentChannel = null;
@@ -37,7 +30,6 @@ function parseM3U(content) {
     return channels;
 }
 
-// Load channels from M3U playlist
 async function loadChannels() {
     try {
         const response = await fetch(PROXY_URL + encodeURIComponent(M3U_URL));
@@ -46,19 +38,16 @@ async function loadChannels() {
         
         if (channels.length > 0) {
             displayChannels();
-            // Automatically load the first channel
             loadStream(channels[0].url, 0);
         } else {
             showError('No channels found in the playlist.');
         }
     } catch (error) {
         console.error('Error loading channels:', error);
-        // Fallback: Load default channel directly
         loadDefaultChannel();
     }
 }
 
-// Load default channel if fetch fails
 function loadDefaultChannel() {
     channels = [{
         name: 'ERi-TV 1 (576p)',
@@ -69,14 +58,12 @@ function loadDefaultChannel() {
     loadStream(channels[0].url, 0);
 }
 
-// HTML escape function to prevent XSS
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// Display channels
 function displayChannels() {
     const channelsDiv = document.getElementById('channels');
     
@@ -98,7 +85,6 @@ function displayChannels() {
     
     channelsDiv.innerHTML = html;
     
-    // Use event delegation instead of inline onclick handlers
     const channelItems = channelsDiv.querySelectorAll('.channel-item');
     channelItems.forEach((item, index) => {
         item.addEventListener('click', () => {
@@ -107,17 +93,14 @@ function displayChannels() {
     });
 }
 
-// Load stream
 function loadStream(url, channelIndex) {
     const video = document.getElementById('video');
     const loading = document.getElementById('loading');
     const error = document.getElementById('error');
     
-    // Show loading
     loading.style.display = 'block';
     error.style.display = 'none';
     
-    // Update active channel
     document.querySelectorAll('.channel-item').forEach((item, index) => {
         if (index === channelIndex) {
             item.classList.add('active');
@@ -126,12 +109,10 @@ function loadStream(url, channelIndex) {
         }
     });
 
-    // Destroy previous HLS instance
     if (hls) {
         hls.destroy();
     }
 
-    // Check if HLS is supported
     if (Hls.isSupported()) {
         hls = new Hls({
             enableWorker: true,
@@ -146,7 +127,6 @@ function loadStream(url, channelIndex) {
             loading.style.display = 'none';
             video.play().catch(e => {
                 console.log('Autoplay prevented:', e);
-                // Keep video muted - user can unmute via controls
                 showError('Click the play button to start the stream');
             });
         });
@@ -158,7 +138,6 @@ function loadStream(url, channelIndex) {
                 switch(data.type) {
                     case Hls.ErrorTypes.NETWORK_ERROR:
                         showError('Network error. Please check your connection or try again later.');
-                        // Try to recover
                         hls.startLoad();
                         break;
                     case Hls.ErrorTypes.MEDIA_ERROR:
@@ -172,13 +151,11 @@ function loadStream(url, channelIndex) {
             }
         });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native HLS support (Safari)
         video.src = url;
         video.addEventListener('loadedmetadata', function() {
             loading.style.display = 'none';
             video.play().catch(e => {
                 console.log('Autoplay prevented:', e);
-                // Keep video muted - user can unmute via controls
                 showError('Click the play button to start the stream');
             });
         });
@@ -192,14 +169,20 @@ function loadStream(url, channelIndex) {
     }
 }
 
-// Show error message
 function showError(message) {
     const error = document.getElementById('error');
     error.textContent = message;
     error.style.display = 'block';
 }
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadChannels();
+});
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+        (e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault();
+    }
 });
