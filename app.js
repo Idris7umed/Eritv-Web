@@ -68,6 +68,13 @@ function loadDefaultChannel() {
     loadStream(channels[0].url, 0);
 }
 
+// HTML escape function to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Display channels
 function displayChannels() {
     const channelsDiv = document.getElementById('channels');
@@ -81,15 +88,22 @@ function displayChannels() {
         <div class="channel-list">
             ${channels.map((channel, index) => `
                 <div class="channel-item ${index === 0 ? 'active' : ''}" 
-                     data-index="${index}"
-                     onclick="loadStream('${channel.url}', ${index})">
-                    <div class="channel-name">${channel.name}</div>
+                     data-index="${index}">
+                    <div class="channel-name">${escapeHtml(channel.name)}</div>
                 </div>
             `).join('')}
         </div>
     `;
     
     channelsDiv.innerHTML = html;
+    
+    // Use event delegation instead of inline onclick handlers
+    const channelItems = channelsDiv.querySelectorAll('.channel-item');
+    channelItems.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            loadStream(channels[index].url, index);
+        });
+    });
 }
 
 // Load stream
@@ -133,6 +147,9 @@ function loadStream(url, channelIndex) {
                 console.log('Autoplay prevented:', e);
                 // Unmute and try again
                 video.muted = false;
+                video.play().catch(err => {
+                    console.log('Playback failed:', err);
+                });
             });
         });
 
@@ -161,7 +178,14 @@ function loadStream(url, channelIndex) {
         video.src = url;
         video.addEventListener('loadedmetadata', function() {
             loading.style.display = 'none';
-            video.play();
+            video.play().catch(e => {
+                console.log('Autoplay prevented:', e);
+                // Unmute and try again
+                video.muted = false;
+                video.play().catch(err => {
+                    console.log('Playback failed:', err);
+                });
+            });
         });
         video.addEventListener('error', function() {
             loading.style.display = 'none';
