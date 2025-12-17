@@ -123,7 +123,7 @@ function loadStream(url, channelIndex) {
             lowLatencyMode: true,
             backBufferLength: 30,
             maxBufferLength: 20,
-            maxMaxBufferLength: 30,
+            maxMaxBufferLength: 25,
             maxBufferSize: 30 * 1000 * 1000,
             maxBufferHole: 0.5,
             highBufferWatchdogPeriod: 1,
