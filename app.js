@@ -101,6 +101,9 @@ function loadStream(url, channelIndex) {
     loading.style.display = 'block';
     error.style.display = 'none';
     
+    // Pause current video immediately for faster switching
+    video.pause();
+    
     document.querySelectorAll('.channel-item').forEach((item, index) => {
         if (index === channelIndex) {
             item.classList.add('active');
@@ -111,24 +114,49 @@ function loadStream(url, channelIndex) {
 
     if (hls) {
         hls.destroy();
+        hls = null;
     }
 
     if (Hls.isSupported()) {
         hls = new Hls({
             enableWorker: true,
             lowLatencyMode: true,
-            backBufferLength: 90
+            backBufferLength: 30,
+            maxBufferLength: 20,
+            maxMaxBufferLength: 30,
+            maxBufferSize: 30 * 1000 * 1000,
+            maxBufferHole: 0.5,
+            highBufferWatchdogPeriod: 1,
+            nudgeOffset: 0.1,
+            nudgeMaxRetry: 5,
+            maxFragLookUpTolerance: 0.2,
+            liveSyncDurationCount: 2,
+            liveMaxLatencyDurationCount: 5,
+            liveDurationInfinity: false,
+            manifestLoadingTimeOut: 10000,
+            manifestLoadingMaxRetry: 3,
+            manifestLoadingRetryDelay: 500,
+            startLevel: -1,
+            abrEwmaDefaultEstimate: 500000
         });
 
         hls.loadSource(url);
         hls.attachMedia(video);
 
+        // Start playing as soon as manifest is parsed
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
             loading.style.display = 'none';
             video.play().catch(e => {
                 console.log('Autoplay prevented:', e);
                 showError('Click the play button to start the stream');
             });
+        });
+        
+        // Additional optimization: hide loading indicator when first fragment is loaded
+        hls.on(Hls.Events.FRAG_LOADED, function(event, data) {
+            if (data.frag.sn === 0 || data.frag.sn === 'initSegment') {
+                loading.style.display = 'none';
+            }
         });
 
         hls.on(Hls.Events.ERROR, function(event, data) {
